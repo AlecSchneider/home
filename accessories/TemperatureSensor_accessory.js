@@ -2,17 +2,21 @@ var Accessory = require('../').Accessory;
 var Service = require('../').Service;
 var Characteristic = require('../').Characteristic;
 var uuid = require('../').uuid;
+var eventEmitter = require('./EventEmitter.js')
+
+
 
 // here's a fake temperature sensor device that we'll expose to HomeKit
 var FAKE_SENSOR = {
-  currentTemperature: 50,
-  getTemperature: function() { 
+  currentTemperature: 20,
+  currentRelativeHumidity: 30,
+  getTemperature: function() {
     console.log("Getting the current temperature!");
     return FAKE_SENSOR.currentTemperature;
   },
-  randomizeTemperature: function() {
-    // randomize temperature to a value between 0 and 100
-    FAKE_SENSOR.currentTemperature = Math.round(Math.random() * 100);
+  getRelativeHumidity: function() {
+    console.log("Getting the current humidity!");
+    return FAKE_SENSOR.currentRelativeHumidity;
   }
 }
 
@@ -23,7 +27,7 @@ var FAKE_SENSOR = {
 var sensorUUID = uuid.generate('hap-nodejs:accessories:temperature-sensor');
 
 // This is the Accessory that we'll return to HAP-NodeJS that represents our fake lock.
-var sensor = exports.accessory = new Accessory('Temperature Sensor', sensorUUID);
+var sensor = exports.accessory = new Accessory('Temperature/Humidity Sensor', sensorUUID);
 
 // Add properties for publishing (in case we're using Core.js and not BridgedCore.js)
 sensor.username = "C1:5D:3A:AE:5E:FA";
@@ -35,19 +39,25 @@ sensor
   .addService(Service.TemperatureSensor)
   .getCharacteristic(Characteristic.CurrentTemperature)
   .on('get', function(callback) {
-    
+
     // return our current value
     callback(null, FAKE_SENSOR.getTemperature());
   });
+sensor
+    .addService(Service.HumiditySensor)
+    .getCharacteristic(Characteristic.CurrentRelativeHumidity)
+    .on('get', function(callback) {
 
-// randomize our temperature reading every 3 seconds
-setInterval(function() {
-  
-  FAKE_SENSOR.randomizeTemperature();
-  
-  // update the characteristic value so interested iOS devices can get notified
-  sensor
-    .getService(Service.TemperatureSensor)
-    .setCharacteristic(Characteristic.CurrentTemperature, FAKE_SENSOR.currentTemperature);
-  
-}, 3000);
+      // return our current value
+      callback(null, FAKE_SENSOR.getRelativeHumidity());
+});
+
+eventEmitter.on('update', function(data){
+    try{
+        data = JSON.parse(data)
+        FAKE_SENSOR.currentTemperature = data.T
+        FAKE_SENSOR.currentRelativeHumidity = data.H
+    }catch(err){
+        console.log(err); //error in the above string(in this case,yes)!
+    }
+  });
