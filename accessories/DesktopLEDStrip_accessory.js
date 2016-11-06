@@ -2,7 +2,6 @@ var Accessory = require('../').Accessory;
 var Service = require('../').Service;
 var Characteristic = require('../').Characteristic;
 var uuid = require('../').uuid;
-var five = require("johnny-five");
 var one = require('onecolor');
 var eventEmitter = require('./EventEmitter.js')
 
@@ -152,15 +151,16 @@ function onPortOpen(){
 
     eventEmitter.on('toggle', function(){
           if(FAKE_LIGHT.powerOn) {
-              port.write("on")
+              port.write("LightOn")
           } else {
-              port.write("off")
+              port.write("LightOff")
           }
       });
       eventEmitter.on('color', function(){
           var newColor = one('hsv('+FAKE_LIGHT.hue+', '+FAKE_LIGHT.saturation+'%, '+FAKE_LIGHT.brightness+'%)').hex()
           port.write(newColor)
       });
+
 }
 
 function onData(data)

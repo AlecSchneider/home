@@ -11,11 +11,17 @@ console.log("Connecting to MQTT broker...");
 var mqtt = require('mqtt');
 var options = {
   port: 1883,
-  host: '10.0.1.5',
+  host: '10.0.1.13',
   clientId: 'MakeUseOf Wifi Light'
 };
 var client = mqtt.connect(options);
 console.log("Wifi Light Connected to MQTT broker");
+client.subscribe('drinkTemperature')
+client.on('message', function (topic, message) {
+    if(topic === 'drinkTemperature') {
+        eventEmitter.emit('updateDrink', message.toString('utf-8'))
+    }
+})
 
 // here's a fake hardware device that we'll expose to HomeKit
 var FAKE_LIGHT = {
@@ -148,3 +154,34 @@ light
      FAKE_LIGHT.setSaturation(value);
      callback();
      })
+
+     eventEmitter.on('OutletAOn', function(){
+         client.publish('drinklight/power', "PowerAOn")
+     });
+     eventEmitter.on('OutletAOff', function(){
+         client.publish('drinklight/power', "PowerAOff")
+     });
+     eventEmitter.on('OutletBOn', function(){
+         client.publish('drinklight/power',"PowerBOn")
+     });
+     eventEmitter.on('OutletBOff', function(){
+         client.publish('drinklight/power',"PowerBOff")
+     });
+     eventEmitter.on('OutletCOn', function(){
+         client.publish('drinklight/power',"PowerCOn")
+     });
+     eventEmitter.on('OutletCOff', function(){
+         client.publish('drinklight/power',"PowerCOff")
+     });
+     eventEmitter.on('beamerOn', function(){
+         client.publish('drinklight/ir',"BeamerOn")
+     });
+     eventEmitter.on('beamerOff', function(){
+         client.publish('drinklight/ir',"BeamerOff")
+     });
+     eventEmitter.on('receiverOn', function(){
+         client.publish('drinklight/ir',"ReceiverOn")
+     });
+     eventEmitter.on('receiverOff', function(){
+         client.publish('drinklight/ir',"ReceiverOff")
+     });
