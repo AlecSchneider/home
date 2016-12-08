@@ -52,9 +52,10 @@ sensor
       callback(null, FAKE_SENSOR.getRelativeHumidity());
 });
 
-eventEmitter.on('update', function(data){
+eventEmitter.on('updateDesk', function(data){
     try{
         data = JSON.parse(data)
+        console.log("DESK! T: "+data.T+" H: "+data.H)
         FAKE_SENSOR.currentTemperature = data.T
         FAKE_SENSOR.currentRelativeHumidity = data.H
     }catch(err){

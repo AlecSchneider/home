@@ -55,6 +55,7 @@ sensor
 eventEmitter.on('updateDrink', function(data){
     try{
         data = JSON.parse(data)
+        console.log("DRINK! T: "+data.T+" H: "+data.H)
         FAKE_SENSOR.currentTemperature = data.T
         FAKE_SENSOR.currentRelativeHumidity = data.H
     }catch(err){

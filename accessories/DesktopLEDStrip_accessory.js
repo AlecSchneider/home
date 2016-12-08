@@ -3,7 +3,7 @@ var Service = require('../').Service;
 var Characteristic = require('../').Characteristic;
 var uuid = require('../').uuid;
 var one = require('onecolor');
-var eventEmitter = require('./EventEmitter.js')
+var client = require('./MQTT.js')
 
 // here's a fake hardware device that we'll expose to HomeKit
 var FAKE_LIGHT = {
@@ -16,19 +16,25 @@ var FAKE_LIGHT = {
     console.log("Turning the light %s!", on ? "ON" : "OFF");
     if (FAKE_LIGHT.powerOn != on) {
         FAKE_LIGHT.powerOn = on;
-        eventEmitter.emit('toggle');
+        if(FAKE_LIGHT.powerOn) {
+            client.publish('desklight', 'on');
+        } else {
+            client.publish('desklight', 'off');
+        }
     }
     // Turn it on and set the initial color
   },
   setBrightness: function(brightness) {
     console.log("Setting light brightness to %s", brightness);
     FAKE_LIGHT.brightness = brightness;
-    eventEmitter.emit('color');
+    var newColor = one('hsv('+FAKE_LIGHT.hue+', '+FAKE_LIGHT.saturation+'%, '+FAKE_LIGHT.brightness+'%)').hex()
+    client.publish('desklight/color', newColor)
   },
   setHue: function(hue){
     console.log("Setting light Hue to %s", hue);
     FAKE_LIGHT.hue = hue;
-    eventEmitter.emit('color');
+    var newColor = one('hsv('+FAKE_LIGHT.hue+', '+FAKE_LIGHT.saturation+'%, '+FAKE_LIGHT.brightness+'%)').hex()
+    client.publish('desklight/color', newColor)
   },
   setSaturation: function(saturation){
     console.log("Setting light Saturation to %s", saturation);
@@ -130,47 +136,3 @@ light
      FAKE_LIGHT.setSaturation(value);
      callback();
      })
-
- var serialport = require("serialport")
- var SerialPort = serialport.SerialPort
-
-var port = new SerialPort("/dev/ttyACM0", {
-  baudrate: 9600,
-  parser: serialport.parsers.readline("\n")
-});
-
-
-port.on('open', onPortOpen);
-port.on('data', onData);
-port.on('close', onClose);
-port.on('error', onError);
-
-
-function onPortOpen(){
-    console.log("YESSIR THE PORT IS OPEN COS CAPS");
-
-    eventEmitter.on('toggle', function(){
-          if(FAKE_LIGHT.powerOn) {
-              port.write("LightOn")
-          } else {
-              port.write("LightOff")
-          }
-      });
-      eventEmitter.on('color', function(){
-          var newColor = one('hsv('+FAKE_LIGHT.hue+', '+FAKE_LIGHT.saturation+'%, '+FAKE_LIGHT.brightness+'%)').hex()
-          port.write(newColor)
-      });
-
-}
-
-function onData(data)
-{
-    eventEmitter.emit('update', data);
-}
-
-function onClose(){
-    console.log("Port is closed, yo");
-}
-function onError(){
-    console.log("something went horribly wrong");
-}
